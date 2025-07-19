@@ -20,7 +20,7 @@ const systemPrompt = {
 };
 
 const chatHistories = new Map();
-const allowedChannelId = '1395914961817043044';
+const allowedChannelId = '1395935206929596547';
 
 client.on('ready', () => {
   console.log(`Bot ${client.user.tag} udah online~ ✨`);
