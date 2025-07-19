@@ -2,10 +2,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const fetch = require('node-fetch');
 const RSSParser = require('rss-parser');
-const fs = require('fs');
 const parser = new RSSParser();
-const axios = require('axios');
-
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -69,18 +66,33 @@ client.on('ready', () => {
 client.on('messageCreate', async (message) => {
   if (message.author.bot || !allowedChannelIds.includes(message.channel.id)) return;
 
+  const text = message.content.toLowerCase();
+
+  // ✅ Gambar cewek aesthetic (SFW)
+  if (text.includes("gambar cewek") || text.includes("gambar lucu") || text.includes("foto aesthetic")) {
+    const imgUrl = "https://source.unsplash.com/featured/?girl,portrait,fashion";
+    return message.reply(`Nih beb, cewek beneran yang cakep & aesthetic banget 😚✨\n${imgUrl}`);
+  }
+
+  // 🔥 Gambar lingerie (NSFW soft)
+  if (text.includes("gambar seksi") || text.includes("foto nakal")) {
+    if (!message.channel.nsfw) {
+      return message.reply("Hehe... fitur nakal cuma bisa dipakai di channel NSFW ya beb 😏");
+    }
+    const imgUrl = "https://source.unsplash.com/featured/?model,lingerie";
+    return message.reply(`Hehe... Nih yang kamu mau beb~ Tapi masih soft ya 😘💦\n${imgUrl}`);
+  }
+
   const userId = message.author.id;
   const userPrompt = message.content.trim();
   if (!userPrompt) return;
 
-  // Simpan chat history
   if (!chatHistories.has(userId)) {
     chatHistories.set(userId, []);
   }
   const history = chatHistories.get(userId);
   history.push({ role: 'user', content: userPrompt });
 
-  // Berita hanya kalau ditanya
   let newsMessage = '';
   if (isAskingForNews(userPrompt)) {
     const news = await getNewsHeadlines();
@@ -105,25 +117,7 @@ Balas selalu pakai gaya cewek Gen Z yang sok lucu, lebay, dan sok manja. Jangan 
     },
     ...history.slice(-5),
   ];
-    // 🎀 SFW: Cewek Asli Aesthetic
-  if (text.includes("gambar cewek") || text.includes("gambar lucu") || text.includes("foto aesthetic")) {
-  const imgUrl = "https://source.unsplash.com/featured/?girl,portrait,fashion";
-  return message.reply({
-    content: `Nih beb, cewek beneran yang cakep & aesthetic banget 😚✨\n${imgUrl}`
-  });
-}
 
-  // 🔥 Semi-NSFW Soft: Realistic but still safe
-  if (text.includes("gambar seksi") || text.includes("foto nakal")) {
-  if (!message.channel.nsfw) {
-    return message.reply("Hehe... fitur nakal cuma bisa dipakai di channel NSFW ya beb 😏");
-  }
-
-  const imgUrl = "https://source.unsplash.com/featured/?model,lingerie";
-  return message.reply({
-    content: `Hehe... Nih yang kamu mau beb~ Tapi masih soft ya 😘💦\n${imgUrl}`
-  });
-}
   try {
     await message.channel.sendTyping();
 
