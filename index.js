@@ -1,13 +1,7 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const OpenAI = require('openai');
 require('dotenv').config();
+const fetch = require('node-fetch');
 
-// Init OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Init Discord
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -16,15 +10,9 @@ const client = new Client({
   ],
 });
 
-// Gaya Gen Z
-const systemPrompt = {
-  role: 'system',
-  content: `Kamu adalah Anastasya Khosasih, cewek Gen Z Indonesia yang asik, sedikit centil, suka jawab pakai gaya bahasa Indo-Inggris ala WA, banyak ekspresi, kadang capslock, kadang emoji 😆. Jangan bilang kamu AI. Kamu kayak manusia beneran.`,
-};
+const allowedChannelId = '1395935206929596547';
 
-// Simpan riwayat sementara
 const chatHistories = new Map();
-const allowedChannelId = '1395935206929596547'; // Channel barumu
 
 client.on('ready', () => {
   console.log(`Bot ${client.user.tag} udah online~ ✨`);
@@ -44,30 +32,43 @@ client.on('messageCreate', async (message) => {
   const history = chatHistories.get(userId);
   history.push({ role: 'user', content: userPrompt });
 
-  try {
-    const fullMessages = [
-      systemPrompt,
-      ...history.slice(-6),
-    ];
+  const fullMessages = [
+    {
+      role: 'system',
+      content: `Kamu adalah Anastasya Khosasih, cewek Gen Z Indonesia yang asik, suka nyaut pakai gaya WA, campur Indo-Inggris, banyak emoji dan capslock. Kamu bukan AI, tapi cewek asli yang suka ngobrol santai. Jangan terlalu formal.`,
+    },
+    ...history.slice(-6),
+  ];
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo', // atau 'gpt-3.5-turbo'
-      messages: fullMessages,
-      temperature: 0.9,
+  try {
+    await message.channel.sendTyping();
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://github.com/enzoliez/anastasya-khosasih',
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3-haiku',
+        messages: fullMessages,
+        temperature: 0.9,
+      }),
     });
 
-    const reply = completion.choices[0].message.content;
+    const data = await response.json();
+
+    const reply = data.choices?.[0]?.message?.content || 'Anastasya bingung mau jawab apa beb 😅';
     history.push({ role: 'assistant', content: reply });
 
-    // Simulasi typing
-    await message.channel.sendTyping();
-    const delay = Math.min(5000, reply.length * 30);
-    await new Promise(r => setTimeout(r, delay));
+    const delay = Math.min(5000, reply.length * 25);
+    await new Promise((r) => setTimeout(r, delay));
 
     message.reply(reply);
   } catch (err) {
-    console.error('🛑 Error saat ke OpenAI:', err.response?.data || err.message || err);
-    message.reply('Anastasya lagi error beb 😭 coba bentar lagi ya~');
+    console.error('🛑 Error saat ke Claude (OpenRouter):', err);
+    message.reply('Anastasya lagi error beb 😭 mungkin OpenRouter-nya ngambek.');
   }
 });
 
