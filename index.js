@@ -1,10 +1,10 @@
-const fs = require('fs');
-const imageData = JSON.parse(fs.readFileSync('./images.json', 'utf-8'));
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const fetch = require('node-fetch');
 const RSSParser = require('rss-parser');
+const fs = require('fs');
 const parser = new RSSParser();
+const imageData = JSON.parse(fs.readFileSync('./images.json', 'utf-8'));
 
 const client = new Client({
   intents: [
@@ -14,11 +14,9 @@ const client = new Client({
   ],
 });
 
-// ID channel yang diizinkan
 const allowedChannelIds = ['1395935206929596547', '1395914961817043044'];
 const chatHistories = new Map();
 
-// Deteksi apakah user minta berita
 function isAskingForNews(text) {
   const lower = text.toLowerCase();
   return (
@@ -32,7 +30,6 @@ function isAskingForNews(text) {
   );
 }
 
-// Ambil berita dari berbagai sumber
 async function getNewsHeadlines() {
   const sources = [
     { name: 'Kompas', url: 'https://www.kompas.com/feeds/nasional.xml' },
@@ -65,12 +62,10 @@ async function getNewsHeadlines() {
   return headlines.join('\n');
 }
 
-// Bot nyala
 client.on('ready', () => {
   console.log(`Bot ${client.user.tag} udah online~ ✨`);
 });
 
-// Pesan masuk
 client.on('messageCreate', async (message) => {
   if (message.author.bot || !allowedChannelIds.includes(message.channel.id)) return;
 
@@ -78,14 +73,7 @@ client.on('messageCreate', async (message) => {
   const userPrompt = message.content.trim();
   if (!userPrompt) return;
 
-  if (!chatHistories.has(userId)) {
-    chatHistories.set(userId, []);
-  }
-
-  const history = chatHistories.get(userId);
-  history.push({ role: 'user', content: userPrompt });
-  
-    // Tangani permintaan gambar aesthetic
+  // Tangani permintaan gambar aesthetic
   const text = userPrompt.toLowerCase();
   const triggerWords = ['gambar cewek', 'foto cewek', 'kirim gambar', 'aesthetic', 'waifu', 'hot'];
   if (triggerWords.some(word => text.includes(word))) {
@@ -101,7 +89,14 @@ client.on('messageCreate', async (message) => {
     });
   }
 
-  // Tambah berita hanya kalau ditanya
+  // Simpan chat history
+  if (!chatHistories.has(userId)) {
+    chatHistories.set(userId, []);
+  }
+  const history = chatHistories.get(userId);
+  history.push({ role: 'user', content: userPrompt });
+
+  // Berita hanya kalau ditanya
   let newsMessage = '';
   if (isAskingForNews(userPrompt)) {
     const news = await getNewsHeadlines();
