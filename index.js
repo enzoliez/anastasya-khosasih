@@ -144,41 +144,25 @@ client.on('messageCreate', async (message) => {
 
   const text = message.content.toLowerCase();
 
-  // === Gambar Lucu (SFW) ===
-  if (text.includes("gambar lucu") || text.includes("gambar cewek") || text.includes("gambar imut")) {
-    try {
-      const { data } = await axios.get("https://api.waifu.pics/sfw/waifu");
-      return message.reply({
-        content: "Nih beb, cewek lucu buat nemenin kamu hari ini 😚✨",
-        files: [data.url]
-      });
-    } catch (err) {
-      console.error("❌ Gagal ambil gambar SFW:", err.message);
-      return message.reply("Huhu maaf ya beb~ aku lagi nggak bisa ambil gambar lucunya 😢");
-    }
+    // 🎀 SFW: Cewek Asli Aesthetic
+  if (text.includes("gambar cewek") || text.includes("gambar lucu") || text.includes("foto aesthetic")) {
+    const imgUrl = "https://source.unsplash.com/featured/?girl,portrait,fashion";
+    return message.reply({
+      content: "Nih beb, cewek beneran yang cakep & aesthetic banget 😚✨",
+      files: [imgUrl]
+    });
   }
 
-  // === Gambar Seksi (NSFW Soft) ===
-  if (text.includes("gambar seksi") || text.includes("gambar nakal") || text.includes("gambar hot")) {
+  // 🔥 Semi-NSFW Soft: Realistic but still safe
+  if (text.includes("gambar seksi") || text.includes("foto nakal")) {
     if (!message.channel.nsfw) {
-      return message.reply("Ehehe, fitur bandel cuma bisa dipakai di channel NSFW ya beb 😏");
+      return message.reply("Hehe... fitur nakal cuma bisa dipakai di channel NSFW ya beb 😏");
     }
-
-    try {
-      const { data } = await axios.get("https://api.waifu.pics/nsfw/waifu");
-      return message.reply({
-        content: "Hehe... Nih yang kamu mau beb~ Tapi jangan bandel-bandel amat ya 😳💦",
-        files: [data.url]
-      });
-    } catch (err) {
-      console.error("❌ Gagal ambil gambar NSFW:", err.message);
-      return message.reply("Ughh... stok gambar hot-nya lagi kehabisan nih beb 😩");
-    }
-  }
-
-  // === Gaya Gen Z Say Hello ===
-  if (text.includes("hai") || text.includes("halo") || text.includes("pagi") || text.includes("malam")) {
-    return message.reply("Haiii beb~ 😘 Kamu dateng juga, bikin aku semangat banget 💖");
+    const imgUrl = "https://source.unsplash.com/featured/?model,lingerie";
+    return message.reply({
+      content: "Hehe... Nih yang kamu mau beb~ Tapi masih soft ya 😘💦",
+      files: [imgUrl]
+    });
   }
 });
 
