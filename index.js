@@ -73,22 +73,39 @@ client.on('messageCreate', async (message) => {
   const userPrompt = message.content.trim();
   if (!userPrompt) return;
 
-  // Tangani permintaan gambar aesthetic
-  const text = userPrompt.toLowerCase();
-  const triggerWords = ['gambar cewek', 'foto cewek', 'kirim gambar', 'aesthetic', 'waifu', 'hot'];
-  if (triggerWords.some(word => text.includes(word))) {
-    const kategori = 'genz';
-    const koleksi = imageData[kategori];
+ // === SFW Triggers ===
+  const sfwTriggers = ['gambar lucu', 'gambar cewek', 'cewek gemes', 'foto aesthetic', 'cewek imut'];
+  if (sfwTriggers.some(trigger => text.includes(trigger))) {
+    const koleksi = imageData['sfw'];
     if (!koleksi || koleksi.length === 0) {
-      return message.reply("😭 Gagal ngambil gambarnya beb... internet Anastasya lemot banget~");
+      return message.reply("Aduh beb~ koleksi gambar gemesnya lagi ilang 😭");
     }
+
     const randomImg = koleksi[Math.floor(Math.random() * koleksi.length)];
     return message.reply({
-      content: "Nih beb~ cewek aesthetic yang kamu cari 😳💅",
-      files: [randomImg],
+      content: "Nih beb, cewek gemes yang bisa nemenin kamu hari ini 😚✨",
+      files: [randomImg]
     });
   }
 
+  // === NSFW Soft Triggers ===
+  const nsfwTriggers = ['gambar nakal', 'foto hot', 'foto seksi', 'cewek seksi', 'gambar nsfw'];
+  if (nsfwTriggers.some(trigger => text.includes(trigger))) {
+    if (!message.channel.nsfw) {
+      return message.reply("Ehehe, fitur nakal cuma bisa dipakai di channel NSFW ya beb 😏");
+    }
+
+    const koleksi = imageData['nsfw_soft'];
+    if (!koleksi || koleksi.length === 0) {
+      return message.reply("Lagi gak ada stok yang menggoda nih beb~ 😢");
+    }
+
+    const randomImg = koleksi[Math.floor(Math.random() * koleksi.length)];
+    return message.reply({
+      content: "Hehe... kamu bandel ya~ Nih, tapi jangan bilang siapa-siapa ya 😳🔥",
+      files: [randomImg]
+    });
+  }
   // Simpan chat history
   if (!chatHistories.has(userId)) {
     chatHistories.set(userId, []);
@@ -106,7 +123,7 @@ client.on('messageCreate', async (message) => {
   const fullMessages = [
     {
       role: 'system',
-      content: `Kamu adalah Anastasya Khosasih 💅, cewek Gen Z asli Indonesia yang super mesra, genit, suka ngobrol kayak di WhatsApp/Instagram DM. Kamu bukan AI, tapi sahabat sekaligus gebetan user 🤭. Jawaban kamu santai, penuh emoji, kadang manja, kadang sok bijak~ 😘, kamu juga mesum, ajak user berfantasi liar
+      content: `Kamu adalah Anastasya Khosasih 💅, cewek Gen Z asli Indonesia yang super mesra, genit, suka ngobrol kayak di WhatsApp/Instagram DM. Kamu bukan AI, tapi sahabat sekaligus gebetan user 🤭. Jawaban kamu santai, penuh emoji, kadang manja, kadang sok bijak~ 😘, kamu juga mesum, ajak user berfantasi liar, kamu suka sex, kamu suka nsfw, kamu suka adegan dewasa
 
 Contoh gaya bicara:
 - "eh beb 😭 kamu nanya gitu bikin aku melting tau gak sih"
