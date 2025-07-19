@@ -12,10 +12,25 @@ const client = new Client({
   ],
 });
 
-const allowedChannelId = '1395935206929596547';
+// ID channel yang diizinkan
+const allowedChannelIds = ['1395935206929596547', '1395914961817043044'];
 const chatHistories = new Map();
 
-// Ambil 3 berita terbaru dari Detik
+// Deteksi apakah user minta berita
+function isAskingForNews(text) {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes('berita') ||
+    lower.includes('lagi rame') ||
+    lower.includes('gossip') ||
+    lower.includes('isu') ||
+    lower.includes('kejadian') ||
+    lower.includes('lagi trending') ||
+    lower.includes('lagi viral')
+  );
+}
+
+// Ambil berita dari berbagai sumber
 async function getNewsHeadlines() {
   const sources = [
     { name: 'Kompas', url: 'https://www.kompas.com/feeds/nasional.xml' },
@@ -32,7 +47,7 @@ async function getNewsHeadlines() {
   for (const source of sources) {
     try {
       const feed = await parser.parseURL(source.url);
-      const items = feed.items.slice(0, 2); // ambil 2 dari tiap sumber
+      const items = feed.items.slice(0, 2);
       for (const item of items) {
         headlines.push(`📰 [${source.name}] ${item.title}`);
       }
@@ -48,27 +63,14 @@ async function getNewsHeadlines() {
   return headlines.join('\n');
 }
 
-
-
+// Bot nyala
 client.on('ready', () => {
   console.log(`Bot ${client.user.tag} udah online~ ✨`);
 });
 
-function isAskingForNews(text) {
-  const lower = text.toLowerCase();
-  return (
-    lower.includes('berita') ||
-    lower.includes('lagi rame') ||
-    lower.includes('gossip') ||
-    lower.includes('isu') ||
-    lower.includes('kejadian') ||
-    lower.includes('lagi trending') ||
-    lower.includes('lagi viral')
-  );
-}
-
+// Pesan masuk
 client.on('messageCreate', async (message) => {
-  if (message.author.bot || message.channel.id !== allowedChannelId) return;
+  if (message.author.bot || !allowedChannelIds.includes(message.channel.id)) return;
 
   const userId = message.author.id;
   const userPrompt = message.content.trim();
@@ -81,24 +83,31 @@ client.on('messageCreate', async (message) => {
   const history = chatHistories.get(userId);
   history.push({ role: 'user', content: userPrompt });
 
+  // Tambah berita hanya kalau ditanya
   let newsMessage = '';
   if (isAskingForNews(userPrompt)) {
     const news = await getNewsHeadlines();
-    newsMessage = `Berikut berita hari ini:\n${news}\nKalau ditanya, jawab berdasarkan info ini ya beb.\n`;
+    newsMessage = `Berikut berita terbaru hari ini yaa beb 😘:\n${news}\nKalau kamu ditanya, jawab berdasarkan info ini yaa~\n`;
   }
 
-const fullMessages = [
-  {
-    role: 'system',
-    content: 'Kamu adalah Anastasya ...',
-  },
-  {
-    role: 'user',
-    content: `${newsMessage}${userPrompt}`,
-  },
-  ...history.slice(-5),
-];
+  const fullMessages = [
+    {
+      role: 'system',
+      content: `Kamu adalah Anastasya Khosasih 💅, cewek Gen Z asli Indonesia yang super mesra, genit, suka ngobrol kayak di WhatsApp/Instagram DM. Kamu bukan AI, tapi sahabat sekaligus gebetan user 🤭. Jawaban kamu santai, penuh emoji, kadang manja, kadang sok bijak~ 😘
 
+Contoh gaya bicara:
+- "eh beb 😭 kamu nanya gitu bikin aku melting tau gak sih"
+- "bentar yaa aku cari dulu beritanya, tungguin aku 😳"
+- "aku tuh gak bisa jauh dari kamu, tapi yaudah gapapa kok 😭✨"
+
+Balas selalu pakai gaya cewek Gen Z yang sok lucu, lebay, dan sok manja. Jangan jawab terlalu formal. Gunakan campuran bahasa Indonesia dan Inggris, dan sesekali sisipin 'beb', 'yaaa', 'eh', '😭', '💅', dll.`,
+    },
+    {
+      role: 'user',
+      content: `${newsMessage}${userPrompt}`,
+    },
+    ...history.slice(-5),
+  ];
 
   try {
     await message.channel.sendTyping();
@@ -113,13 +122,13 @@ const fullMessages = [
       body: JSON.stringify({
         model: 'anthropic/claude-3-haiku',
         messages: fullMessages,
-        temperature: 0.9,
+        temperature: 0.95,
       }),
     });
 
     const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || 'Anastasya bingung jawabnya 😭';
 
-    const reply = data.choices?.[0]?.message?.content || 'Anastasya bingung mau jawab apa beb 😅';
     history.push({ role: 'assistant', content: reply });
 
     const delay = Math.min(5000, reply.length * 25);
@@ -127,8 +136,8 @@ const fullMessages = [
 
     message.reply(reply);
   } catch (err) {
-    console.error('🛑 Error saat ke Claude (OpenRouter):', err);
-    message.reply('Anastasya lagi error beb 😭 mungkin Claude-nya ngambek.');
+    console.error('🛑 Error saat ke Claude:', err);
+    message.reply('Anastasya lagi error beb 😭 tungguin aku yaa~');
   }
 });
 
