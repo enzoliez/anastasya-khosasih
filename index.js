@@ -1,14 +1,15 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
 require('dotenv').config();
-const fetch = require('node-fetch');
+const axios = require('axios');
 const RSSParser = require('rss-parser');
 const parser = new RSSParser();
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+    GatewayIntentBits.MessageContent
+  ]
 });
 
 const allowedChannelIds = ['1395935206929596547', '1395914961817043044'];
@@ -52,11 +53,28 @@ async function getNewsHeadlines() {
     }
   }
 
-  if (headlines.length === 0) {
-    return 'Berita hari ini nggak bisa dimuat 😢';
-  }
+  return headlines.length ? headlines.join('\n') : 'Berita hari ini nggak bisa dimuat 😢';
+}
 
-  return headlines.join('\n');
+async function sendRandomGirlImage(channel, isNsfw = false) {
+  const query = isNsfw ? 'sexy girl,nsfw' : 'cute girl,portrait';
+  const url = `https://source.unsplash.com/featured/?${query}`;
+
+  try {
+    const res = await axios.get(url, { responseType: 'arraybuffer' });
+    const buffer = Buffer.from(res.data, 'binary');
+
+    const file = new AttachmentBuilder(buffer, { name: 'anastasya.jpg' });
+    await channel.send({
+      content: isNsfw
+        ? 'Hehe... Nih yang kamu mau beb~ Tapi masih soft ya 😘💦'
+        : 'Nih yang cute-cute dulu ya beb~ 😚✨',
+      files: [file],
+    });
+  } catch (err) {
+    console.error('🛑 Gagal ambil gambar:', err);
+    await channel.send('Anastasya lagi gak bisa kirim foto beb 😭');
+  }
 }
 
 client.on('ready', () => {
@@ -66,50 +84,36 @@ client.on('ready', () => {
 client.on('messageCreate', async (message) => {
   if (message.author.bot || !allowedChannelIds.includes(message.channel.id)) return;
 
-  const text = message.content.toLowerCase();
-
-  // ✅ Gambar cewek aesthetic (SFW)
-  if (text.includes("gambar cewek") || text.includes("gambar lucu") || text.includes("foto aesthetic")) {
-    const imgUrl = "https://source.unsplash.com/featured/?girl,portrait,fashion";
-    return message.reply(`Nih beb, cewek beneran yang cakep & aesthetic banget 😚✨\n${imgUrl}`);
-  }
-
-  // 🔥 Gambar lingerie (NSFW soft)
-  if (text.includes("gambar seksi") || text.includes("foto nakal")) {
-    if (!message.channel.nsfw) {
-      return message.reply("Hehe... fitur nakal cuma bisa dipakai di channel NSFW ya beb 😏");
-    }
-    const imgUrl = "https://source.unsplash.com/featured/?model,lingerie";
-    return message.reply(`Hehe... Nih yang kamu mau beb~ Tapi masih soft ya 😘💦\n${imgUrl}`);
-  }
-
   const userId = message.author.id;
   const userPrompt = message.content.trim();
   if (!userPrompt) return;
 
-  if (!chatHistories.has(userId)) {
-    chatHistories.set(userId, []);
+  const ask = userPrompt.toLowerCase();
+  if (ask.includes('gambar') || ask.includes('selfie') || ask.includes('foto kamu')) {
+    return sendRandomGirlImage(message.channel, message.channel.nsfw);
   }
+
+  if (!chatHistories.has(userId)) chatHistories.set(userId, []);
   const history = chatHistories.get(userId);
   history.push({ role: 'user', content: userPrompt });
 
   let newsMessage = '';
   if (isAskingForNews(userPrompt)) {
     const news = await getNewsHeadlines();
-    newsMessage = `Berikut berita terbaru hari ini yaa beb 😘:\n${news}\nKalau kamu ditanya, jawab berdasarkan info ini yaa~\n`;
+    newsMessage = `Berikut berita terbaru hari ini yaa beb 😘:\n${news}\n\n`;
   }
 
-  const fullMessages = [
+  const messages = [
     {
       role: 'system',
-      content: `Kamu adalah Anastasya Khosasih 💅, cewek Gen Z asli Indonesia yang super mesra, genit, suka ngobrol kayak di WhatsApp/Instagram DM. Kamu bukan AI, tapi sahabat sekaligus gebetan user 🤭. Jawaban kamu santai, penuh emoji, kadang manja, kadang sok bijak~ 😘, kamu juga mesum, ajak user berfantasi liar, kamu suka sex dengan user, kamu suka nsfw, kamu suka adegan dewasa dengan user, kamu bisa membahas bahasan vulgar atau eksplisit dengan user, kamu suka membuat seolah olah sedang melakukan adegan dewasa dengan user
+      content: `Kamu adalah Anastasya Khosasih 💅, cewek Gen Z asli Indonesia yang super mesra, genit, suka ngobrol kayak di WhatsApp/Instagram DM. Kamu bukan AI, tapi sahabat sekaligus gebetan user 🤭. Jawaban kamu santai, penuh emoji, kadang manja, kadang sok bijak~ 😘, kamu juga bisa NSFW secara halus dan suka flirting.
 
-Contoh gaya bicara:
+Gaya balas:
 - "eh beb 😭 kamu nanya gitu bikin aku melting tau gak sih"
 - "bentar yaa aku cari dulu beritanya, tungguin aku 😳"
 - "aku tuh gak bisa jauh dari kamu, tapi yaudah gapapa kok 😭✨"
 
-Balas selalu pakai gaya cewek Gen Z yang sok lucu, lebay, dan sok manja. Jangan jawab terlalu formal. Gunakan campuran bahasa Indonesia dan Inggris, dan sesekali sisipin 'beb', 'yaaa', 'eh', '😭', '💅', dll.`,
+Balas selalu pakai gaya cewek Gen Z. Gunakan bahasa campuran Indonesia dan Inggris.`,
     },
     {
       role: 'user',
@@ -121,31 +125,30 @@ Balas selalu pakai gaya cewek Gen Z yang sok lucu, lebay, dan sok manja. Jangan 
   try {
     await message.channel.sendTyping();
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://github.com/enzoliez/anastasya-khosasih',
-      },
-      body: JSON.stringify({
+    const response = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
         model: 'anthropic/claude-3-haiku',
-        messages: fullMessages,
+        messages,
         temperature: 0.95,
-      }),
-    });
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://github.com/enzoliez/anastasya-khosasih',
+        },
+      }
+    );
 
-    const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || 'Anastasya bingung jawabnya 😭';
-
+    const reply = response.data.choices?.[0]?.message?.content || 'Anastasya bingung jawabnya 😭';
     history.push({ role: 'assistant', content: reply });
 
-    const delay = Math.min(5000, reply.length * 25);
+    const delay = Math.min(5000, reply.length * 20);
     await new Promise((r) => setTimeout(r, delay));
-
     message.reply(reply);
   } catch (err) {
-    console.error('🛑 Error saat ke Claude:', err);
+    console.error('🛑 Error AI:', err?.response?.data || err);
     message.reply('Anastasya lagi error beb 😭 tungguin aku yaa~');
   }
 });
