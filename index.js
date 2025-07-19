@@ -18,24 +18,26 @@ const chatHistories = new Map();
 // Ambil 3 berita terbaru dari Detik
 async function getNewsHeadlines() {
   const sources = [
-    'https://www.kompas.com/feeds/nasional.xml',
-    'https://www.cnnindonesia.com/nasional/rss',
-    'https://rss.detik.com/index.php/detikcom/nasional'
+    { name: 'Kompas', url: 'https://www.kompas.com/feeds/nasional.xml' },
+    { name: 'CNN Indonesia', url: 'https://www.cnnindonesia.com/nasional/rss' },
+    { name: 'Detik', url: 'https://rss.detik.com/index.php/detikcom/nasional' },
+    { name: 'KapanLagi', url: 'https://www.kapanlagi.com/feed/' },
+    { name: 'Suara', url: 'https://www.suara.com/rss' },
+    { name: 'Okezone', url: 'https://www.okezone.com/rss' },
+    { name: 'Liputan6', url: 'https://www.liputan6.com/rss' },
   ];
 
   const headlines = [];
 
-  for (const url of sources) {
+  for (const source of sources) {
     try {
-      const feed = await parser.parseURL(url);
-      const title = feed.title || 'Berita';
-      const items = feed.items.slice(0, 2); // ambil 2 per sumber
-
+      const feed = await parser.parseURL(source.url);
+      const items = feed.items.slice(0, 2); // ambil 2 dari tiap sumber
       for (const item of items) {
-        headlines.push(`📰 [${title}] ${item.title}`);
+        headlines.push(`📰 [${source.name}] ${item.title}`);
       }
     } catch (err) {
-      console.warn(`⚠️ Gagal ambil dari ${url}: ${err.message}`);
+      console.warn(`⚠️ Gagal ambil dari ${source.name}: ${err.message}`);
     }
   }
 
@@ -45,6 +47,7 @@ async function getNewsHeadlines() {
 
   return headlines.join('\n');
 }
+
 
 
 client.on('ready', () => {
