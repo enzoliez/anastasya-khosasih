@@ -54,6 +54,19 @@ client.on('ready', () => {
   console.log(`Bot ${client.user.tag} udah online~ ✨`);
 });
 
+function isAskingForNews(text) {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes('berita') ||
+    lower.includes('lagi rame') ||
+    lower.includes('gossip') ||
+    lower.includes('isu') ||
+    lower.includes('kejadian') ||
+    lower.includes('lagi trending') ||
+    lower.includes('lagi viral')
+  );
+}
+
 client.on('messageCreate', async (message) => {
   if (message.author.bot || message.channel.id !== allowedChannelId) return;
 
@@ -68,19 +81,24 @@ client.on('messageCreate', async (message) => {
   const history = chatHistories.get(userId);
   history.push({ role: 'user', content: userPrompt });
 
-  const news = await getNewsHeadlines();
+  let newsMessage = '';
+  if (isAskingForNews(userPrompt)) {
+    const news = await getNewsHeadlines();
+    newsMessage = `Berikut berita hari ini:\n${news}\nKalau ditanya, jawab berdasarkan info ini ya beb.\n`;
+  }
 
-  const fullMessages = [
-    {
-      role: 'system',
-      content: `Kamu adalah Anastasya Khosasih, cewek Gen Z Indonesia yang asik, suka nyaut pakai gaya WA, campur Indo-Inggris, banyak emoji dan capslock. Kamu bukan AI, tapi cewek asli yang suka ngobrol santai. Jangan terlalu formal.`,
-    },
-    {
-      role: 'user',
-      content: `Berikut berita nasional hari ini:\n${news}\nKalo nanti ditanya atau nyambung, jawab sesuai berita ini ya beb.`,
-    },
-    ...history.slice(-5),
-  ];
+const fullMessages = [
+  {
+    role: 'system',
+    content: 'Kamu adalah Anastasya ...',
+  },
+  {
+    role: 'user',
+    content: `${newsMessage}${userPrompt}`,
+  },
+  ...history.slice(-5),
+];
+
 
   try {
     await message.channel.sendTyping();
