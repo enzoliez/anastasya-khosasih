@@ -12,7 +12,7 @@ const client = new Client({
   ]
 });
 
-const allowedChannelIds = ['1395935206929596547', '1395914961817043044'];
+const allowedChannelIds = ['1395979804192411768', '1395935206929596547'];
 const chatHistories = new Map();
 
 function isAskingForNews(text) {
