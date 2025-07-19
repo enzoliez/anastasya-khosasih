@@ -1,3 +1,5 @@
+const fs = require('fs');
+const imageData = JSON.parse(fs.readFileSync('./images.json', 'utf-8'));
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const fetch = require('node-fetch');
@@ -82,6 +84,22 @@ client.on('messageCreate', async (message) => {
 
   const history = chatHistories.get(userId);
   history.push({ role: 'user', content: userPrompt });
+  
+    // Tangani permintaan gambar aesthetic
+  const text = userPrompt.toLowerCase();
+  const triggerWords = ['gambar cewek', 'foto cewek', 'kirim gambar', 'aesthetic', 'waifu', 'hot'];
+  if (triggerWords.some(word => text.includes(word))) {
+    const kategori = 'genz';
+    const koleksi = imageData[kategori];
+    if (!koleksi || koleksi.length === 0) {
+      return message.reply("😭 Gagal ngambil gambarnya beb... internet Anastasya lemot banget~");
+    }
+    const randomImg = koleksi[Math.floor(Math.random() * koleksi.length)];
+    return message.reply({
+      content: "Nih beb~ cewek aesthetic yang kamu cari 😳💅",
+      files: [randomImg],
+    });
+  }
 
   // Tambah berita hanya kalau ditanya
   let newsMessage = '';
