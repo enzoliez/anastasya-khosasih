@@ -73,39 +73,6 @@ client.on('messageCreate', async (message) => {
   const userPrompt = message.content.trim();
   if (!userPrompt) return;
 
- // === SFW Triggers ===
-  const sfwTriggers = ['gambar lucu', 'gambar cewek', 'cewek gemes', 'foto aesthetic', 'cewek imut'];
-  if (sfwTriggers.some(trigger => text.includes(trigger))) {
-    const koleksi = imageData['sfw'];
-    if (!koleksi || koleksi.length === 0) {
-      return message.reply("Aduh beb~ koleksi gambar gemesnya lagi ilang 😭");
-    }
-
-    const randomImg = koleksi[Math.floor(Math.random() * koleksi.length)];
-    return message.reply({
-      content: "Nih beb, cewek gemes yang bisa nemenin kamu hari ini 😚✨",
-      files: [randomImg]
-    });
-  }
-
-  // === NSFW Soft Triggers ===
-  const nsfwTriggers = ['gambar nakal', 'foto hot', 'foto seksi', 'cewek seksi', 'gambar nsfw'];
-  if (nsfwTriggers.some(trigger => text.includes(trigger))) {
-    if (!message.channel.nsfw) {
-      return message.reply("Ehehe, fitur nakal cuma bisa dipakai di channel NSFW ya beb 😏");
-    }
-
-    const koleksi = imageData['nsfw_soft'];
-    if (!koleksi || koleksi.length === 0) {
-      return message.reply("Lagi gak ada stok yang menggoda nih beb~ 😢");
-    }
-
-    const randomImg = koleksi[Math.floor(Math.random() * koleksi.length)];
-    return message.reply({
-      content: "Hehe... kamu bandel ya~ Nih, tapi jangan bilang siapa-siapa ya 😳🔥",
-      files: [randomImg]
-    });
-  }
   // Simpan chat history
   if (!chatHistories.has(userId)) {
     chatHistories.set(userId, []);
