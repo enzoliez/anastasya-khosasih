@@ -79,38 +79,6 @@ client.on('messageCreate', async (message) => {
   }
   const history = chatHistories.get(userId);
   history.push({ role: 'user', content: userPrompt });
-  
-  // === SFW Auto Image ===
-  if (text.includes("gambar lucu") || text.includes("gambar cewek") || text.includes("gambar imut")) {
-    try {
-      const { data } = await axios.get("https://api.waifu.pics/sfw/waifu");
-      return message.reply({
-        content: "Nih beb, cewek lucu buat nemenin kamu hari ini 😚✨",
-        files: [data.url]
-      });
-    } catch (err) {
-      console.error("❌ Gagal ambil gambar SFW:", err.message);
-      return message.reply("Huhu maaf ya beb~ aku lagi nggak bisa ambil gambar lucunya 😢");
-    }
-  }
-
-  // === NSFW Auto Image ===
-  if (text.includes("gambar seksi") || text.includes("gambar nakal") || text.includes("gambar hot")) {
-    if (!message.channel.nsfw) {
-      return message.reply("Ehehe, fitur bandel cuma bisa dipakai di channel NSFW ya beb 😏");
-    }
-
-    try {
-      const { data } = await axios.get("https://api.waifu.pics/nsfw/waifu");
-      return message.reply({
-        content: "Hehe... Nih yang kamu mau beb~ Tapi jangan bandel-bandel amat ya 😳💦",
-        files: [data.url]
-      });
-    } catch (err) {
-      console.error("❌ Gagal ambil gambar NSFW:", err.message);
-      return message.reply("Ughh... stok gambar hot-nya lagi kehabisan nih beb 😩");
-    }
-  }
 
   // Berita hanya kalau ditanya
   let newsMessage = '';
@@ -167,6 +135,50 @@ Balas selalu pakai gaya cewek Gen Z yang sok lucu, lebay, dan sok manja. Jangan 
   } catch (err) {
     console.error('🛑 Error saat ke Claude:', err);
     message.reply('Anastasya lagi error beb 😭 tungguin aku yaa~');
+  }
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  if (message.channel.id !== "1395935206929596547") return;
+
+  const text = message.content.toLowerCase();
+
+  // === Gambar Lucu (SFW) ===
+  if (text.includes("gambar lucu") || text.includes("gambar cewek") || text.includes("gambar imut")) {
+    try {
+      const { data } = await axios.get("https://api.waifu.pics/sfw/waifu");
+      return message.reply({
+        content: "Nih beb, cewek lucu buat nemenin kamu hari ini 😚✨",
+        files: [data.url]
+      });
+    } catch (err) {
+      console.error("❌ Gagal ambil gambar SFW:", err.message);
+      return message.reply("Huhu maaf ya beb~ aku lagi nggak bisa ambil gambar lucunya 😢");
+    }
+  }
+
+  // === Gambar Seksi (NSFW Soft) ===
+  if (text.includes("gambar seksi") || text.includes("gambar nakal") || text.includes("gambar hot")) {
+    if (!message.channel.nsfw) {
+      return message.reply("Ehehe, fitur bandel cuma bisa dipakai di channel NSFW ya beb 😏");
+    }
+
+    try {
+      const { data } = await axios.get("https://api.waifu.pics/nsfw/waifu");
+      return message.reply({
+        content: "Hehe... Nih yang kamu mau beb~ Tapi jangan bandel-bandel amat ya 😳💦",
+        files: [data.url]
+      });
+    } catch (err) {
+      console.error("❌ Gagal ambil gambar NSFW:", err.message);
+      return message.reply("Ughh... stok gambar hot-nya lagi kehabisan nih beb 😩");
+    }
+  }
+
+  // === Gaya Gen Z Say Hello ===
+  if (text.includes("hai") || text.includes("halo") || text.includes("pagi") || text.includes("malam")) {
+    return message.reply("Haiii beb~ 😘 Kamu dateng juga, bikin aku semangat banget 💖");
   }
 });
 
