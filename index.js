@@ -69,19 +69,41 @@ client.on('messageCreate', async (message) => {
   const text = message.content.toLowerCase();
 
   // ✅ Gambar cewek aesthetic (SFW)
-  if (text.includes("gambar cewek") || text.includes("gambar lucu") || text.includes("foto aesthetic")) {
-    const imgUrl = "https://source.unsplash.com/featured/?girl,portrait,fashion";
-    return message.reply(`Nih beb, cewek beneran yang cakep & aesthetic banget 😚✨\n${imgUrl}`);
+if (text.includes("gambar cewek") || text.includes("gambar lucu") || text.includes("foto aesthetic")) {
+  try {
+    const response = await fetch("https://source.unsplash.com/featured/?girl,portrait,fashion");
+    const buffer = await response.buffer();
+
+    await message.channel.send({
+      content: 'Nih beb, cewek beneran yang cakep & aesthetic banget 😚✨',
+      files: [{ attachment: buffer, name: 'cewek-aesthetic.jpg' }],
+    });
+  } catch (err) {
+    console.error('Gagal ambil gambar SFW:', err);
+    message.reply("Aduh beb, gambarnya lagi gak bisa dimuat 😭");
   }
+}
 
   // 🔥 Gambar lingerie (NSFW soft)
-  if (text.includes("gambar seksi") || text.includes("foto nakal")) {
-    if (!message.channel.nsfw) {
-      return message.reply("Hehe... fitur nakal cuma bisa dipakai di channel NSFW ya beb 😏");
-    }
-    const imgUrl = "https://source.unsplash.com/featured/?model,lingerie";
-    return message.reply(`Hehe... Nih yang kamu mau beb~ Tapi masih soft ya 😘💦\n${imgUrl}`);
+if (text.includes("gambar seksi") || text.includes("foto nakal")) {
+  if (!message.channel.nsfw) {
+    return message.reply("Hehe... fitur nakal cuma bisa dipakai di channel NSFW ya beb 😏");
   }
+
+  try {
+    const response = await fetch("https://source.unsplash.com/featured/?model,lingerie");
+    const buffer = await response.buffer();
+
+    await message.channel.send({
+      content: 'Hehe... Nih yang kamu mau beb~ Tapi masih soft ya 😘💦',
+      files: [{ attachment: buffer, name: 'cewek-seksi.jpg' }],
+    });
+  } catch (err) {
+    console.error('Gagal ambil gambar NSFW:', err);
+    message.reply("Aduh beb, foto nakalnya lagi error 😢");
+  }
+}
+
 
   const userId = message.author.id;
   const userPrompt = message.content.trim();
