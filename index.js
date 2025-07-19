@@ -1,6 +1,8 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const fetch = require('node-fetch');
+const RSSParser = require('rss-parser');
+const parser = new RSSParser();
 
 const client = new Client({
   intents: [
@@ -11,8 +13,19 @@ const client = new Client({
 });
 
 const allowedChannelId = '1395935206929596547';
-
 const chatHistories = new Map();
+
+// Ambil 3 berita terbaru dari Detik
+async function getNewsHeadlines() {
+  try {
+    const feed = await parser.parseURL('https://rss.detik.com/index.php/detikcom/nasional');
+    const headlines = feed.items.slice(0, 3).map(item => `- ${item.title}`);
+    return headlines.join('\n');
+  } catch (e) {
+    console.error('🛑 Gagal ambil berita:', e);
+    return 'Berita hari ini nggak bisa dimuat 😢';
+  }
+}
 
 client.on('ready', () => {
   console.log(`Bot ${client.user.tag} udah online~ ✨`);
@@ -32,12 +45,18 @@ client.on('messageCreate', async (message) => {
   const history = chatHistories.get(userId);
   history.push({ role: 'user', content: userPrompt });
 
+  const news = await getNewsHeadlines();
+
   const fullMessages = [
     {
       role: 'system',
       content: `Kamu adalah Anastasya Khosasih, cewek Gen Z Indonesia yang asik, suka nyaut pakai gaya WA, campur Indo-Inggris, banyak emoji dan capslock. Kamu bukan AI, tapi cewek asli yang suka ngobrol santai. Jangan terlalu formal.`,
     },
-    ...history.slice(-6),
+    {
+      role: 'user',
+      content: `Berikut berita nasional hari ini:\n${news}\nKalo nanti ditanya atau nyambung, jawab sesuai berita ini ya beb.`,
+    },
+    ...history.slice(-5),
   ];
 
   try {
@@ -68,7 +87,7 @@ client.on('messageCreate', async (message) => {
     message.reply(reply);
   } catch (err) {
     console.error('🛑 Error saat ke Claude (OpenRouter):', err);
-    message.reply('Anastasya lagi error beb 😭 mungkin OpenRouter-nya ngambek.');
+    message.reply('Anastasya lagi error beb 😭 mungkin Claude-nya ngambek.');
   }
 });
 
