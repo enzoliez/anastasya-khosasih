@@ -17,15 +17,35 @@ const chatHistories = new Map();
 
 // Ambil 3 berita terbaru dari Detik
 async function getNewsHeadlines() {
-  try {
-    const feed = await parser.parseURL('https://rss.detik.com/index.php/detikcom/nasional');
-    const headlines = feed.items.slice(0, 3).map(item => `- ${item.title}`);
-    return headlines.join('\n');
-  } catch (e) {
-    console.error('🛑 Gagal ambil berita:', e);
+  const sources = [
+    'https://www.kompas.com/feeds/nasional.xml',
+    'https://www.cnnindonesia.com/nasional/rss',
+    'https://rss.detik.com/index.php/detikcom/nasional'
+  ];
+
+  const headlines = [];
+
+  for (const url of sources) {
+    try {
+      const feed = await parser.parseURL(url);
+      const title = feed.title || 'Berita';
+      const items = feed.items.slice(0, 2); // ambil 2 per sumber
+
+      for (const item of items) {
+        headlines.push(`📰 [${title}] ${item.title}`);
+      }
+    } catch (err) {
+      console.warn(`⚠️ Gagal ambil dari ${url}: ${err.message}`);
+    }
+  }
+
+  if (headlines.length === 0) {
     return 'Berita hari ini nggak bisa dimuat 😢';
   }
+
+  return headlines.join('\n');
 }
+
 
 client.on('ready', () => {
   console.log(`Bot ${client.user.tag} udah online~ ✨`);
