@@ -51,7 +51,7 @@ client.on('messageCreate', async (message) => {
     ];
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4', // atau 'gpt-3.5-turbo'
+      model: 'gpt-3.5-turbo', // atau 'gpt-3.5-turbo'
       messages: fullMessages,
       temperature: 0.9,
     });
@@ -66,7 +66,7 @@ client.on('messageCreate', async (message) => {
 
     message.reply(reply);
   } catch (err) {
-    console.error('Error saat ke OpenAI:', err);
+    console.error('🛑 Error saat ke OpenAI:', err.response?.data || err.message || err);
     message.reply('Anastasya lagi error beb 😭 coba bentar lagi ya~');
   }
 });
